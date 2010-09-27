@@ -21,7 +21,7 @@
   <property name="project.tarfile"   value="${project.distdir}/${project.tarfilename}" />
 
   <fileset dir="${project.srcdir}" id="srcfiles">
-    <include name="*"/>
+    <include name="**/**"/>
   </fileset>
 
   <!-- Include Travis' phing ext for creating package.xml files -->
@@ -129,7 +129,7 @@
         <pear minimum_version="1.6.0" />
       </dependencies>
 
-      <changelog version="1.0.0" date="2010-09-24" license="New-BSD">
+      <changelog version="1.0.0" date="2010-09-27" license="New-BSD">
         <!--        Don't exceed this width         -->
         Initial release of package
       </changelog>

@@ -74,12 +74,12 @@ You will need the following dependencies installed first.
 
 This component includes a build.xml file containing several options to make life a little easier.
 
-    stuart@ubuntu:~/MF/MF_Autoloader$ phing
-    Buildfile: /home/stuart/MF/MF_Autoloader/build.xml
+    stuart@ubuntu:~/MF/MF_Exception$ phing
+    Buildfile: /home/stuart/MF/MF_Exception/build.xml
 
-    MF_Autoloader > help:
+    MF_Exception > help:
 
-         [echo] MF_Autoloader 0.0.3: build.xml targets:
+         [echo] MF_Exception 0.0.3: build.xml targets:
          [echo] 
          [echo] test
          [echo]   Run the component's PHPUnit tests

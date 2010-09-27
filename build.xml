@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- build file for phing -->
+<project name="MF_Exception" default="help" basedir=".">
+  <!-- Human-readable info about our component -->
+  <property name="project.name"      value="MF_Exception" />
+  <property name="project.version"   value="1.0.0" />
+  
+  <!-- Paths to the directories that we work with -->
+  <property name="project.srcdir"    value="${project.basedir}/src"    override="true" />
+  <property name="project.testsdir"  value="${project.basedir}/tests"  override="true" />
+
+  <property name="project.reviewdir" value="${project.basedir}/review" override="true" />
+  <property name="project.logsdir"   value="${project.reviewdir}/logs" override="true" />
+  <property name="project.docsdir"   value="${project.reviewdir}/docs"   override="true" />
+
+  <property name="project.builddir"  value="${project.basedir}/build"  override="true" />
+  <property name="project.pkgdir"  value="${project.builddir}/${project.name}-${project.version}"  override="true" />
+  <property name="project.distdir" value="${project.basedir}/dist" />
+
+  <property name="project.tarfilename"   value="${project.name}-${project.version}.tgz" />
+  <property name="project.tarfile"   value="${project.distdir}/${project.tarfilename}" />
+
+  <fileset dir="${project.srcdir}" id="srcfiles">
+    <include name="*"/>
+  </fileset>
+
+  <!-- Include Travis' phing ext for creating package.xml files -->
+  <!-- get this from pear.domain51.com -->
+  <taskdef classname="phing.tasks.ext.d51PearPkg2Task" name="d51pearpkg2" />
+
+  <!-- Tell the user what this build file supports -->
+  <target name="help">
+    <echo message="${project.name} ${project.version}: build.xml targets:" />
+    <echo message="" />
+    <echo message="test" />
+    <echo message="  Run the component's PHPUnit tests" />
+    <echo message="code-review" />
+    <echo message="  Run code quality tests (pdepend, phpmd, phpcpd, phpcs)" />
+    <echo message="pear-package" />
+    <echo message="  Create a PEAR-compatible package" />
+    <echo message="install.local" />
+    <echo message="  Install this component from source" />
+    <echo message="  You must be root to run this target!!" />
+    <echo message="publish" />
+    <echo message="  Publish the pear package onto the channel server" />
+    <echo message="clean" />
+    <echo message="  Remove all temporary folders created by this build file" />
+  </target>
+
+  <!-- Run the unit tests for this module -->
+  <target name="test">
+    <delete dir="${project.reviewdir}/code-coverage" />
+    <mkdir dir="${project.reviewdir}/code-coverage" />
+    <exec command="phpunit --bootstrap=${project.testsdir}/bootstrap.php --coverage-html ${project.reviewdir}/code-coverage ${project.testsdir}" checkreturn="true" logoutput="true"/>
+    <echo/>
+    <echo>The code coverage report is in ${project.reviewdir}/code-coverage</echo>
+  </target>
+
+  <!-- Run the code review quality tests -->
+  <target name="code-review" depends="pdepend, phpmd, phpcpd, phpcs" />
+
+  <target name="pdepend">
+    <mkdir dir="${project.reviewdir}/logs" />
+    <mkdir dir="${project.reviewdir}/pdepend" />
+    <exec command="pdepend --jdepend-xml=${project.reviewdir}/logs/jdepend.xml --jdepend-chart=${project.reviewdir}/pdepend/dependencies.svg --overview-pyramid=${project.reviewdir}/pdepend/overview-pyramid.svg ${project.srcdir}" />
+  </target>
+
+  <!-- Generate package docs -->
+  <target name="phpdoc">
+    <delete dir="${project.docsdir}" />
+    <mkdir dir="${project.docsdir}" />
+    <exec command="phpdoc -d ${project.srcdir} -t ${project.docsdir} "/>
+  </target>
+
+  <!-- Check code for code smells -->
+  <target name="phpmd">
+    <mkdir dir="${project.reviewdir}/logs" />
+    <exec command="phpmd ${project.srcdir} xml codesize,design,naming,unusedcode --reportfile=${project.logsdir}/pmd.xml" />
+  </target>
+
+  <target name="phpcpd">
+    <exec command="phpcpd --log-pmd ${project.logsdir}/pmd-cpd.xml ${project.srcdir}" />
+  </target>
+
+  <!-- Check the code for style violations -->
+  <target name="phpcs">
+    <exec command="phpcs --report=checkstyle --report-file=${project.logsdir}/checkstyle.xml --standard=Sebastian --extensions=php ${project.srcdir}" />
+  </target>
+
+  <!-- Build the code-browser files -->
+  <target name="phpcb">
+    <delete dir="${project.reviewdir}/code-browser" />
+    <mkdir dir="${project.reviewdir}/code-browser" />
+    <exec command="phpcb --log ${project.logsdir} --source ${project.srcdir} --output ${project.reviewdir}/code-browser" />
+  </target>
+
+  <!-- Create the PEAR package, ready for release -->
+  <target name="pear-package">
+    <echo>Building release directory</echo>
+    <delete dir="${project.builddir}" />
+    <mkdir dir="${project.pkgdir}" />
+    <copy todir="${project.pkgdir}">
+      <fileset refid="srcfiles"/>
+    </copy>
+    <d51pearpkg2 dir="${project.pkgdir}" baseinstalldir="/">
+      <name>${project.name}</name>
+      <summary>Basic enterprise-class exception classes</summary>
+      <channel>pear.methodosity.com</channel>
+      <description>
+        <!--        Don't exceed this width         -->
+        This package provides a minimum standard of
+        enterprise-class exception classes.
+
+        These classes are designed for the Methodosity
+        Framework, but are generic enough to be re-used
+        in other projects.
+      </description>
+
+      <notes>See http://framework.methodosity.com for more details.</notes>
+
+      <lead user="stuherbert" name="Stuart Herbert" email="stuart@stuartherbert.com" />
+      <license uri="http://www.opensource.org/licenses/bsd-license.php">New-BSD</license>
+
+      <version release="${project.version}" api="1.0" />
+      <stability release="stable" api="stable" />
+      
+      <dependencies>
+        <php minimum_version="5.3.0" />
+        <pear minimum_version="1.6.0" />
+      </dependencies>
+
+      <changelog version="1.0.0" date="2010-09-24" license="New-BSD">
+        <!--        Don't exceed this width         -->
+        Initial release of package
+      </changelog>
+    </d51pearpkg2>
+    <move file="${project.pkgdir}/package.xml" tofile="${project.builddir}/package.xml" />
+    <echo>Creating ${project.tarfile} PEAR package</echo>
+
+    <mkdir dir="${project.distdir}" />
+    <delete file="${project.tarfile}" />
+    <tar destfile="${project.tarfile}" compression="gzip">
+      <fileset dir="${project.builddir}">
+        <include name="*" />
+      </fileset>
+    </tar>
+    <echo>Your PEAR package is in ${project.tarfile}</echo>
+  </target>
+
+  <!-- Install the code -->
+  <target name="install.local" depends="pear-package">
+    <exec command="pear install -f -a ${project.tarfile}" checkreturn="true" logoutput="true" />
+  </target>
+
+  <!-- Publish the distribution files for download -->
+  <target name="publish" depends="pear-package">
+    <exec command="scp ${project.tarfile} stuart@pear.methodosity.com:incoming-packages/" checkreturn="true" logoutput="true"/>
+    <exec command="ssh stuart@pear.methodosity.com pirum add /var/www/pear.methodosity.com incoming-packages/${project.tarfilename}" checkreturn="true" logoutput="true" />
+  </target>
+
+  <!-- Clean up the mess -->
+  <target name="clean">
+    <delete dir="${project.builddir}" />
+    <delete dir="${project.distdir}" />
+    <delete dir="${project.reviewdir}" />
+  </target>
+</project>

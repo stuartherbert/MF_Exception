@@ -41,6 +41,8 @@
     <echo message="install.local" />
     <echo message="  Install this component from source" />
     <echo message="  You must be root to run this target!!" />
+    <echo message="git-tag" />
+    <echo message="  Tag a new release in git and push to github" />
     <echo message="publish" />
     <echo message="  Publish the pear package onto the channel server" />
     <echo message="clean" />
@@ -150,6 +152,12 @@
   <!-- Install the code -->
   <target name="install.local" depends="pear-package">
     <exec command="pear install -f -a ${project.tarfile}" checkreturn="true" logoutput="true" />
+  </target>
+
+  <!-- Tag this release -->
+  <target name="git-tag">
+    <exec command="git tag -a 'Release-${project.version}' -m 'Tagged Release ${project-version}'" checkreturn="true" logoutput="true" />
+    <exec command="git push --tags origin master" checkreturn="true" logoutput="true" />
   </target>
 
   <!-- Publish the distribution files for download -->

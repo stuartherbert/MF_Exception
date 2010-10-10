@@ -3,7 +3,10 @@
 <project default="help" basedir=".">
   <!-- Human-readable info about our component -->
   <property file="build.properties" />
-  
+
+  <property name="project.version"   value="${project.majorVersion}.${project.minorVersion}.${project.patchLevel}" />
+  <property name="project.apiversion" value="${project.majorVersion}.${project.minorVersion}" />
+
   <!-- Paths to the directories that we work with -->
   <property name="project.srcdir"    value="${project.basedir}/src"    override="true" />
   <property name="project.testsdir"  value="${project.basedir}/tests"  override="true" />

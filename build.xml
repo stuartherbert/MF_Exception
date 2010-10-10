@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- build file for phing -->
-<project name="MF_Exception" default="help" basedir=".">
+<project default="help" basedir=".">
   <!-- Human-readable info about our component -->
-  <property name="project.name"      value="MF_Exception" />
-  <property name="project.version"   value="1.0.0" />
+  <property file="build.properties" />
   
   <!-- Paths to the directories that we work with -->
   <property name="project.srcdir"    value="${project.basedir}/src"    override="true" />
@@ -24,14 +23,12 @@
     <include name="**/**"/>
   </fileset>
 
-  <!-- Include Travis' phing ext for creating package.xml files -->
-  <!-- get this from pear.domain51.com -->
-  <taskdef classname="phing.tasks.ext.d51PearPkg2Task" name="d51pearpkg2" />
-
   <!-- Tell the user what this build file supports -->
   <target name="help">
     <echo message="${project.name} ${project.version}: build.xml targets:" />
     <echo message="" />
+    <echo message="lint" />
+    <echo message="  Check the PHP files for syntax errors" />
     <echo message="test" />
     <echo message="  Run the component's PHPUnit tests" />
     <echo message="code-review" />
@@ -49,8 +46,17 @@
     <echo message="  Remove all temporary folders created by this build file" />
   </target>
 
+  <!-- Run PHP lint on all of the source code -->
+  <target name="lint">
+    <phplint>
+      <fileset dir="${project.srcdir}">
+        <include name="**/*.php" />
+      </fileset>
+    </phplint>
+  </target>
+
   <!-- Run the unit tests for this module -->
-  <target name="test">
+  <target name="test" depends="lint">
     <delete dir="${project.reviewdir}/code-coverage" />
     <mkdir dir="${project.reviewdir}/code-coverage" />
     <exec command="phpunit --bootstrap=${project.testsdir}/bootstrap.php --coverage-html ${project.reviewdir}/code-coverage ${project.testsdir}" checkreturn="true" logoutput="true"/>
@@ -104,39 +110,14 @@
     <copy todir="${project.pkgdir}">
       <fileset refid="srcfiles"/>
     </copy>
-    <d51pearpkg2 dir="${project.pkgdir}" baseinstalldir="/">
-      <name>${project.name}</name>
-      <summary>Basic enterprise-class exception classes</summary>
-      <channel>pear.methodosity.com</channel>
-      <description>
-        <!--        Don't exceed this width         -->
-        This package provides a minimum standard of
-        enterprise-class exception classes.
+    <copy todir="${project.builddir}">
+      <fileset dir=".">
+        <include name="package.xml" />
+      </fileset>
+    </copy>
 
-        These classes are designed for the Methodosity
-        Framework, but are generic enough to be re-used
-        in other projects.
-      </description>
+    <exec command="php tools/populatepackage.php build.properties ${project.builddir}/package.xml ${project.pkgdir}" />
 
-      <notes>See http://framework.methodosity.com for more details.</notes>
-
-      <lead user="stuherbert" name="Stuart Herbert" email="stuart@stuartherbert.com" />
-      <license uri="http://www.opensource.org/licenses/bsd-license.php">New-BSD</license>
-
-      <version release="${project.version}" api="1.0" />
-      <stability release="stable" api="stable" />
-      
-      <dependencies>
-        <php minimum_version="5.3.0" />
-        <pear minimum_version="1.6.0" />
-      </dependencies>
-
-      <changelog version="1.0.0" date="2010-09-27" license="New-BSD">
-        <!--        Don't exceed this width         -->
-        Initial release of package
-      </changelog>
-    </d51pearpkg2>
-    <move file="${project.pkgdir}/package.xml" tofile="${project.builddir}/package.xml" />
     <echo>Creating ${project.tarfile} PEAR package</echo>
 
     <mkdir dir="${project.distdir}" />
@@ -173,3 +154,4 @@
     <delete dir="${project.reviewdir}" />
   </target>
 </project>
+<!-- vim: set tabstop=2 shiftwidth=2 expandtab: -->
